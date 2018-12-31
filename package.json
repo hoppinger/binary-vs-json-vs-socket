@@ -1,0 +1,67 @@
+{
+  "name": "ts-bccc-meta-interpreter-playground",
+  "author": {
+    "name": "Dr. Giuseppe Maggiore",
+    "email": "giuseppemag@gmail.com"
+  },
+  "license": "UNLICENSED",
+  "version": "1.0.0",
+  "scripts": {
+    "web:css": "gulp",
+    "web:compile": "webpack",
+    "web:compile-watch": "webpack -w",
+    "web:compile-min": "webpack -p --output-filename=site.min.js",
+    "web:start": "dotnet run",
+    "web:watch": "dotnet watch run"
+  },
+  "engines": {
+    "vscode": "^1.23.0"
+  },
+  "main": "desktop/Student/main.js",
+  "dependencies": {
+    "immutable": "^3.8.2",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-router-dom": "^4.3.1",
+    "source-map": "^0.6.1"
+  },
+  "devDependencies": {
+    "@types/react": "^16.4.9",
+    "@types/react-dom": "^16.0.7",
+    "@types/source-map": "^0.5.7",
+    "awesome-typescript-loader": "^3.1.2",
+    "babel-core": "^6.22.1",
+    "babel-env": "^2.4.1",
+    "babel-loader": "^6.2.10",
+    "babel-plugin-transform-runtime": "^6.22.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.22.0",
+    "babel-preset-stage-0": "^6.22.0",
+    "babelify": "^7.3.0",
+    "bootstrap": "3.3.7",
+    "browserify": "^14.0.0",
+    "flat": "^4.0.0",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^4.1.0",
+    "gulp-clean-css": "^3.9.2",
+    "gulp-debounced-watch": "^1.0.4",
+    "gulp-debug": "^2.1.2",
+    "gulp-filter": "^5.1.0",
+    "gulp-gitmodified": "^1.1.1",
+    "gulp-json-editor": "^2.2.2",
+    "gulp-merge-media-queries": "^0.2.1",
+    "gulp-mocha": "^3.0.1",
+    "gulp-plumber": "^1.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-tslint": "^8.1.3",
+    "gulp-typescript": "^4.0.1",
+    "gulp-util": "^3.0.7",
+    "gulp-watch": "^5.0.0",
+    "source-map-loader": "^0.1.6",
+    "typescript": "^2.6.1",
+    "webpack": "^2.3.2"
+  }
+}
