@@ -1,0 +1,13 @@
+# production overrides
+
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    ingress.kubernetes.io/auth-type: null
+    ingress.kubernetes.io/auth-secret: null
+  path: /
+  hosts:
+    - partou.nl
+    - www.partou.nl
+  tls:
+    - secretName: multidomain-partou-nl
