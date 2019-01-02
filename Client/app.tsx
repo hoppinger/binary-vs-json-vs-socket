@@ -21,20 +21,24 @@ class Scene extends React.Component<Props, State> {
   constructor(props:Props, context:any) {
     super(props, context)
 
-    const socket = new WebSocket('wss://localhost:5001/ws')
-    socket.binaryType = 'arraybuffer'
     this.state = {
-      socket:socket,
+      socket:this.initSocket(),
       jsonEndpointTime:zeroAverage,
       binaryEndpointTime:zeroAverage,
       socketTime:zeroAverage,
       requestSize:10
     }
+  }
 
+  initSocket() {
+    const url = `wss${window.location.origin.replace(/^https/, "")}/ws`
+    const socket = new WebSocket(url)
+    socket.binaryType = 'arraybuffer'
     socket.addEventListener('message', event => {
       this.callbacks.forEach(c => c(event.data));
       this.callbacks = []
     });
+    return socket
   }
 
   callbacks : Array<(data:any) => void> = []
@@ -86,7 +90,6 @@ class Scene extends React.Component<Props, State> {
     return <div>
       <input type="number" value={this.state.requestSize.toString()} onChange={e => {
         const v = parseInt(e.currentTarget.value)
-        console.log(v, e.currentTarget.value)
         this.setState(s => ({...s, requestSize:v}))
       } } />
 
@@ -102,11 +105,9 @@ class Scene extends React.Component<Props, State> {
 
   testJsonEndpoint(trials:number) {
     const t0 = Date.now()
-    if (!this.state.socket) return
-    this.state.socket.send("request_numbers")
-      this.loadNumbersFromJSONEndpoint().then(res => {
+    this.loadNumbersFromJSONEndpoint().then(res => {
       const t1 = Date.now()
-      console.log("Result:", res)
+      // console.log("Result:", res)
       this.setState(s => ({...s, jsonEndpointTime:addItem(t1-t0, s.jsonEndpointTime)}), () =>
         trials > 0 ? this.testJsonEndpoint(trials - 1) : undefined)
     })
@@ -114,28 +115,36 @@ class Scene extends React.Component<Props, State> {
 
   testBinaryEndpoint(trials:number) {
     const t0 = Date.now()
-    if (!this.state.socket) return
-    this.state.socket.send("request_numbers")
-      this.loadNumbersFromBinaryEndpoint().then(res => {
+    this.loadNumbersFromBinaryEndpoint().then(res => {
       const t1 = Date.now()
-      console.log("Result:", res)
+      // console.log("Result:", res)
       this.setState(s => ({...s, binaryEndpointTime:addItem(t1-t0, s.binaryEndpointTime)}), () =>
         trials > 0 ? this.testBinaryEndpoint(trials - 1) : undefined)
     })
   }
 
   testSocket(trials:number) {
-    const t0 = Date.now()
     if (!this.state.socket) return
-    var dv = new DataView(new ArrayBuffer(4))
-    dv.setInt32(0, this.state.requestSize, true)
-    this.state.socket.send(dv)
+    const t0 = Date.now()
+    let f = () => {
+      if (!this.state.socket) return
+      var dv = new DataView(new ArrayBuffer(4))
+      dv.setInt32(0, this.state.requestSize, true)
+      this.state.socket.send(dv)
       this.loadNumbersFromSocket().then(res => {
-      const t1 = Date.now()
-      console.log("Result:", res)
-      this.setState(s => ({...s, socketTime:addItem(t1-t0, s.socketTime)}), () =>
+        const t1 = Date.now()
+        // console.log("Result:", res)
+        this.setState(s => ({...s, socketTime:addItem(t1-t0, s.socketTime)}), () =>
         trials > 0 ? this.testSocket(trials - 1) : undefined)
-    })
+      })
+    }
+    if (this.state.socket.readyState != 1) {
+      console.log("Reopening socket.")
+      const f0 = f
+      f = () => this.setState(s => ({...s, socket:this.initSocket()}), () => f0())
+    }
+
+    f()
   }
 }
 

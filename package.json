@@ -7,12 +7,9 @@
   "license": "UNLICENSED",
   "version": "1.0.0",
   "scripts": {
-    "web:css": "gulp",
-    "web:compile": "webpack",
-    "web:compile-watch": "webpack -w",
-    "web:compile-min": "webpack -p --output-filename=site.min.js",
-    "web:start": "dotnet run",
-    "web:watch": "dotnet watch run"
+    "css": "gulp",
+    "ts": "webpack -w",
+    "dotnet": "dotnet watch run"
   },
   "engines": {
     "vscode": "^1.23.0"
