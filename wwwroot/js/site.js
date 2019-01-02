@@ -4491,7 +4491,8 @@ var Scene = /** @class */ (function (_super) {
             socket: _this.initSocket(),
             jsonEndpointTime: zeroAverage,
             binaryEndpointTime: zeroAverage,
-            socketTime: zeroAverage,
+            binarySocketTime: zeroAverage,
+            jsonSocketTime: zeroAverage,
             requestSize: 10
         };
         return _this;
@@ -4528,6 +4529,16 @@ var Scene = /** @class */ (function (_super) {
             });
         });
     };
+    Scene.prototype.loadNumbersFromJSONSocket = function () {
+        var _this = this;
+        return new Promise(function (res, rej) {
+            _this.callbacks.push(function (data) {
+                var s = "";
+                new Uint8Array(data).forEach(function (x) { return s += String.fromCharCode(x); });
+                res(JSON.parse(s));
+            });
+        });
+    };
     Scene.prototype.decodeStream = function (data) {
         var dv = new DataView(data);
         var result = Array();
@@ -4561,7 +4572,7 @@ var Scene = /** @class */ (function (_super) {
             });
         });
     };
-    Scene.prototype.loadNumbersFromSocket = function () {
+    Scene.prototype.loadNumbersFromBinarySocket = function () {
         var _this = this;
         return new Promise(function (res, rej) {
             _this.callbacks.push(function (data) {
@@ -4579,7 +4590,9 @@ var Scene = /** @class */ (function (_super) {
                 } }),
             React.createElement("button", { onClick: function (_) { return _this.testJsonEndpoint(trials); } }, "Load numbers from JSON endpoint"),
             React.createElement("button", { onClick: function (_) { return _this.testBinaryEndpoint(trials); } }, "Load numbers from binary endpoint"),
-            React.createElement("button", { onClick: function (_) { return _this.testSocket(trials); } }, "Load numbers from socket"),
+            React.createElement("button", { onClick: function (_) { return _this.testBinarySocket(trials); } }, "Load numbers from binary socket"),
+            React.createElement("button", { onClick: function (_) { return _this.testJSONSocket(trials); } }, "Load numbers from JSON socket"),
+            React.createElement("button", { onClick: function (_) { return _this.setState(function (s) { return (__assign({}, s, { jsonEndpointTime: zeroAverage, binaryEndpointTime: zeroAverage, binarySocketTime: zeroAverage, jsonSocketTime: zeroAverage, requestSize: 10 })); }); } }, "Clear"),
             React.createElement("p", null,
                 "JSON endpoint time: ",
                 average(this.state.jsonEndpointTime)),
@@ -4587,8 +4600,11 @@ var Scene = /** @class */ (function (_super) {
                 "Binary endpoint time: ",
                 average(this.state.binaryEndpointTime)),
             React.createElement("p", null,
-                "Socket time: ",
-                average(this.state.socketTime)));
+                "JSON socket time: ",
+                average(this.state.jsonSocketTime)),
+            React.createElement("p", null,
+                "Binary socket time: ",
+                average(this.state.binarySocketTime)));
     };
     Scene.prototype.testJsonEndpoint = function (trials) {
         var _this = this;
@@ -4612,7 +4628,7 @@ var Scene = /** @class */ (function (_super) {
             });
         });
     };
-    Scene.prototype.testSocket = function (trials) {
+    Scene.prototype.testBinarySocket = function (trials) {
         var _this = this;
         if (!this.state.socket)
             return;
@@ -4620,14 +4636,15 @@ var Scene = /** @class */ (function (_super) {
         var f = function () {
             if (!_this.state.socket)
                 return;
-            var dv = new DataView(new ArrayBuffer(4));
-            dv.setInt32(0, _this.state.requestSize, true);
+            var dv = new DataView(new ArrayBuffer(8));
+            dv.setInt32(0, 0, true);
+            dv.setInt32(4, _this.state.requestSize, true);
             _this.state.socket.send(dv);
-            _this.loadNumbersFromSocket().then(function (res) {
+            _this.loadNumbersFromBinarySocket().then(function (res) {
                 var t1 = Date.now();
                 // console.log("Result:", res)
-                _this.setState(function (s) { return (__assign({}, s, { socketTime: addItem(t1 - t0, s.socketTime) })); }, function () {
-                    return trials > 0 ? _this.testSocket(trials - 1) : undefined;
+                _this.setState(function (s) { return (__assign({}, s, { binarySocketTime: addItem(t1 - t0, s.binarySocketTime) })); }, function () {
+                    return trials > 0 ? _this.testBinarySocket(trials - 1) : undefined;
                 });
             });
         };
@@ -4635,6 +4652,33 @@ var Scene = /** @class */ (function (_super) {
             console.log("Reopening socket.");
             var f0_1 = f;
             f = function () { return _this.setState(function (s) { return (__assign({}, s, { socket: _this.initSocket() })); }, function () { return f0_1(); }); };
+        }
+        f();
+    };
+    Scene.prototype.testJSONSocket = function (trials) {
+        var _this = this;
+        if (!this.state.socket)
+            return;
+        var t0 = Date.now();
+        var f = function () {
+            if (!_this.state.socket)
+                return;
+            var dv = new DataView(new ArrayBuffer(8));
+            dv.setInt32(0, 1, true);
+            dv.setInt32(4, _this.state.requestSize, true);
+            _this.state.socket.send(dv);
+            _this.loadNumbersFromJSONSocket().then(function (res) {
+                var t1 = Date.now();
+                //console.log("Result:", res)
+                _this.setState(function (s) { return (__assign({}, s, { jsonSocketTime: addItem(t1 - t0, s.jsonSocketTime) })); }, function () {
+                    return trials > 0 ? _this.testJSONSocket(trials - 1) : undefined;
+                });
+            });
+        };
+        if (this.state.socket.readyState != 1) {
+            console.log("Reopening socket.");
+            var f0_2 = f;
+            f = function () { return _this.setState(function (s) { return (__assign({}, s, { socket: _this.initSocket() })); }, function () { return f0_2(); }); };
         }
         f();
     };

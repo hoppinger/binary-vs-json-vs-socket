@@ -13,7 +13,8 @@ interface Props {}
 interface State { socket?:WebSocket,
   jsonEndpointTime:Average,
   binaryEndpointTime:Average,
-  socketTime:Average,
+  binarySocketTime:Average,
+  jsonSocketTime:Average,
   requestSize:number
  }
 
@@ -25,7 +26,8 @@ class Scene extends React.Component<Props, State> {
       socket:this.initSocket(),
       jsonEndpointTime:zeroAverage,
       binaryEndpointTime:zeroAverage,
-      socketTime:zeroAverage,
+      binarySocketTime:zeroAverage,
+      jsonSocketTime:zeroAverage,
       requestSize:10
     }
   }
@@ -53,6 +55,16 @@ class Scene extends React.Component<Props, State> {
     return data as number[]
   }
 
+  loadNumbersFromJSONSocket() : Promise<number[]> {
+    return new Promise((res,rej) => {
+      this.callbacks.push((data:ArrayBuffer) => {
+        let s = ""
+        new Uint8Array(data).forEach(x => s += String.fromCharCode(x))
+        res(JSON.parse(s))
+      })
+    })
+  }
+
   decodeStream(data:ArrayBuffer) : number[] {
     var dv = new DataView(data)
     const result = Array<number>()
@@ -76,7 +88,7 @@ class Scene extends React.Component<Props, State> {
     return this.decodeStream(data)
   }
 
-  loadNumbersFromSocket() : Promise<number[]> {
+  loadNumbersFromBinarySocket() : Promise<number[]> {
     return new Promise((res,rej) => {
       this.callbacks.push((data:ArrayBuffer) => {
 
@@ -95,11 +107,19 @@ class Scene extends React.Component<Props, State> {
 
       <button onClick={_ => this.testJsonEndpoint(trials)}>Load numbers from JSON endpoint</button>
       <button onClick={_ => this.testBinaryEndpoint(trials)}>Load numbers from binary endpoint</button>
-      <button onClick={_ => this.testSocket(trials)}>Load numbers from socket</button>
+      <button onClick={_ => this.testBinarySocket(trials)}>Load numbers from binary socket</button>
+      <button onClick={_ => this.testJSONSocket(trials)}>Load numbers from JSON socket</button>
+      <button onClick={_ => this.setState(s => ({...s,
+        jsonEndpointTime:zeroAverage,
+        binaryEndpointTime:zeroAverage,
+        binarySocketTime:zeroAverage,
+        jsonSocketTime:zeroAverage,
+        requestSize:10}))}>Clear</button>
 
       <p>JSON endpoint time: {average(this.state.jsonEndpointTime)}</p>
       <p>Binary endpoint time: {average(this.state.binaryEndpointTime)}</p>
-      <p>Socket time: {average(this.state.socketTime)}</p>
+      <p>JSON socket time: {average(this.state.jsonSocketTime)}</p>
+      <p>Binary socket time: {average(this.state.binarySocketTime)}</p>
     </div>
   }
 
@@ -123,19 +143,45 @@ class Scene extends React.Component<Props, State> {
     })
   }
 
-  testSocket(trials:number) {
+  testBinarySocket(trials:number) {
     if (!this.state.socket) return
     const t0 = Date.now()
     let f = () => {
       if (!this.state.socket) return
-      var dv = new DataView(new ArrayBuffer(4))
-      dv.setInt32(0, this.state.requestSize, true)
+      var dv = new DataView(new ArrayBuffer(8))
+      dv.setInt32(0, 0, true)
+      dv.setInt32(4, this.state.requestSize, true)
       this.state.socket.send(dv)
-      this.loadNumbersFromSocket().then(res => {
+      this.loadNumbersFromBinarySocket().then(res => {
         const t1 = Date.now()
         // console.log("Result:", res)
-        this.setState(s => ({...s, socketTime:addItem(t1-t0, s.socketTime)}), () =>
-        trials > 0 ? this.testSocket(trials - 1) : undefined)
+        this.setState(s => ({...s, binarySocketTime:addItem(t1-t0, s.binarySocketTime)}), () =>
+        trials > 0 ? this.testBinarySocket(trials - 1) : undefined)
+      })
+    }
+    if (this.state.socket.readyState != 1) {
+      console.log("Reopening socket.")
+      const f0 = f
+      f = () => this.setState(s => ({...s, socket:this.initSocket()}), () => f0())
+    }
+
+    f()
+  }
+
+  testJSONSocket(trials:number) {
+    if (!this.state.socket) return
+    const t0 = Date.now()
+    let f = () => {
+      if (!this.state.socket) return
+      var dv = new DataView(new ArrayBuffer(8))
+      dv.setInt32(0, 1, true)
+      dv.setInt32(4, this.state.requestSize, true)
+      this.state.socket.send(dv)
+      this.loadNumbersFromJSONSocket().then(res => {
+        const t1 = Date.now()
+        //console.log("Result:", res)
+        this.setState(s => ({...s, jsonSocketTime:addItem(t1-t0, s.jsonSocketTime)}), () =>
+        trials > 0 ? this.testJSONSocket(trials - 1) : undefined)
       })
     }
     if (this.state.socket.readyState != 1) {

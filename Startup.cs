@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace web_sockets_playground
 {
@@ -97,22 +98,34 @@ namespace web_sockets_playground
             while (!result.CloseStatus.HasValue)
             {
                 var br = new BinaryReader(new MemoryStream(buffer));
+                var format = br.ReadInt32();
                 var requestSize = br.ReadInt32();
-                // Console.WriteLine($"Request (binary socket) {requestSize}");
+                // Console.WriteLine($"Request {format} (binary socket) {requestSize}");
 
                 var numbers = Utils.GetNumbers(requestSize);
 
                 using(var ms = new MemoryStream()) {
-                    using(var bw = new BinaryWriter(ms)) {
-                        bw.Write(numbers.Length);
-                        foreach (var x in numbers) {
-                            bw.Write(x);
-                        }
+                    if (format == 0) { // binary
+                        using(var bw = new BinaryWriter(ms)) {
+                            bw.Write(numbers.Length);
+                            foreach (var x in numbers) {
+                                bw.Write(x);
+                            }
 
-                        bw.Flush();
-                        ms.Seek(0, SeekOrigin.Begin);
-                        buffer = ms.ToArray();
-                        await webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+                            bw.Flush();
+                            ms.Seek(0, SeekOrigin.Begin);
+                            buffer = ms.ToArray();
+                            await webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+                        }
+                    } else { // JSON
+                        using (var sw = new StreamWriter(ms)) {
+                            var s = JsonConvert.SerializeObject(numbers);
+                            sw.Write(s);
+                            sw.Flush();
+                            ms.Seek(0, SeekOrigin.Begin);
+                            buffer = ms.ToArray();
+                            await webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+                        }
                     }
                 }
 

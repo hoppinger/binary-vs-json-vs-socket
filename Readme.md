@@ -2,8 +2,9 @@
 
 ## Deployment
 
-build and push new version of the application with 
+build and push new version of the application with
 
+    service docker start
     docker build -t hoppinger.azurecr.io/binary-vs-json:latest .
     docker push hoppinger.azurecr.io/binary-vs-json:latest
 

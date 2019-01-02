@@ -32,7 +32,6 @@ namespace web_sockets_playground.Controllers
         [HttpGet()]
         public FileStreamResult Numbers([FromQuery] int requestSize)
         {
-            // Console.WriteLine($"Request (binary) {requestSize}");
             var numbers = Utils.GetNumbers(requestSize);
 
             var ms = new System.IO.MemoryStream();
