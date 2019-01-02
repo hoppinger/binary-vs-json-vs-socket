@@ -9,7 +9,8 @@
   "scripts": {
     "css": "gulp",
     "ts": "webpack -w",
-    "dotnet": "dotnet watch run"
+    "dotnet": "dotnet watch run",
+    "web:compile-min": "webpack -p --output-filename=site.min.js"
   },
   "engines": {
     "vscode": "^1.23.0"
