@@ -37,7 +37,7 @@
     "babel-preset-react": "^6.22.0",
     "babel-preset-stage-0": "^6.22.0",
     "babelify": "^7.3.0",
-    "bootstrap": "3.3.7",
+    "bootstrap": "3.4.1",
     "browserify": "^14.0.0",
     "flat": "^4.0.0",
     "gulp": "^3.9.1",
