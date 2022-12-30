@@ -39,7 +39,7 @@
     "babelify": "^7.3.0",
     "bootstrap": "3.3.7",
     "browserify": "^14.0.0",
-    "flat": "^4.0.0",
+    "flat": "^5.0.1",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^4.1.0",
     "gulp-clean-css": "^3.9.2",
